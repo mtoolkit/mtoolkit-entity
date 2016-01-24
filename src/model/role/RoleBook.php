@@ -14,7 +14,7 @@ class RoleBook
      * @throws \Exception
      */
     public static function save(Role $role, \PDO $connection=null){
-        $sql = "CALL mentity_role_save(?);";
+        $sql = "CALL mt_role_save(?);";
         $query = new MPDOQuery($sql, $connection);
         $query->bindValue($role->getName());
         $queryResult = $query->exec();
@@ -36,7 +36,7 @@ class RoleBook
      * @return bool
      */
     public static function delete(ReadableRole $role, \PDO $connection=null){
-        $sql = "CALL mentity_role_delete(?);";
+        $sql = "CALL mt_role_delete(?);";
         $query = new MPDOQuery($sql, $connection);
         $query->bindValue($role->getId());
         return $query->exec();
@@ -53,7 +53,7 @@ class RoleBook
     public static function saveRole($userId, Role $role, \PDO $connection=null){
         $role=self::save($role);
 
-        $sql = "CALL mentity_user_save_role(?,?);";
+        $sql = "CALL mt_user_save_role(?,?);";
         $query = new MPDOQuery($sql, $connection);
         $query->bindValue($userId, $role->getId());
         $queryResult = $query->exec();
@@ -66,39 +66,14 @@ class RoleBook
     }
 
     /**
-     * @param $roleId
-     * @param \PDO|null $connection
-     * @return Role
-     * @throws \Exception
-     */
-    public static function get($roleId, \PDO $connection=null){
-        $toReturn = new Role();
-        $sql = "CALL mentity_role_get(?);";
-        $query = new MPDOQuery($sql, $connection);
-        $query->bindValue($roleId);
-        $queryResult = $query->exec();
-
-        if ($queryResult == false || $query->getResult()->rowCount() <= 0) {
-            return $toReturn;
-        }
-
-        foreach ($query->getResult() as $row) {
-            $toReturn->setId($row['id'])
-                ->setName($row['name']);
-        }
-
-        return $toReturn;
-    }
-
-    /**
      * @param $userId
      * @param \PDO|null $connection
      * @return array
      * @throws \Exception
      */
-    public static function getList($userId, \PDO $connection=null){
+    public static function get($userId, \PDO $connection=null){
         $toReturn = array();
-        $sql = "CALL mentity_role_get_list(?);";
+        $sql = "CALL mt_role_get_list(?);";
         $query = new MPDOQuery($sql, $connection);
         $query->bindValue($userId);
         $queryResult = $query->exec();
