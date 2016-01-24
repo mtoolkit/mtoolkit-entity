@@ -34,12 +34,12 @@ class User implements ReadableUser
     /**
      * @var \DateTime
      */
-    private $lockoutEndDateUtc;
+    private $enabledDate;
 
     /**
      * @var bool
      */
-    private $lockoutEnabled;
+    private $enabled;
 
     /**
      * @var int
@@ -152,42 +152,6 @@ class User implements ReadableUser
     }
 
     /**
-     * @return \DateTime
-     */
-    public function getLockoutEndDateUtc()
-    {
-        return $this->lockoutEndDateUtc;
-    }
-
-    /**
-     * @param \DateTime $lockoutEndDateUtc
-     * @return User
-     */
-    public function setLockoutEndDateUtc($lockoutEndDateUtc)
-    {
-        $this->lockoutEndDateUtc = $lockoutEndDateUtc;
-        return $this;
-    }
-
-    /**
-     * @return boolean
-     */
-    public function isLockoutEnabled()
-    {
-        return $this->lockoutEnabled;
-    }
-
-    /**
-     * @param boolean $lockoutEnabled
-     * @return User
-     */
-    public function setLockoutEnabled($lockoutEnabled)
-    {
-        $this->lockoutEnabled = $lockoutEnabled;
-        return $this;
-    }
-
-    /**
      * @return int
      */
     public function getAccessFailedCount()
@@ -256,6 +220,42 @@ class User implements ReadableUser
     public function setUserLoginsList(array $userLoginsList)
     {
         $this->userLoginsList = $userLoginsList;
+        return $this;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getEnabledDate()
+    {
+        return $this->enabledDate;
+    }
+
+    /**
+     * @param \DateTime $enabledDate
+     * @return User
+     */
+    public function setEnabledDate($enabledDate)
+    {
+        $this->enabledDate = $enabledDate;
+        return $this;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isEnabled()
+    {
+        return $this->enabled;
+    }
+
+    /**
+     * @param boolean $enabled
+     * @return User
+     */
+    public function setEnabled($enabled)
+    {
+        $this->enabled = $enabled;
         return $this;
     }
 
