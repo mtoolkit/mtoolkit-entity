@@ -6,17 +6,7 @@ interface ReadableProvider
     /**
      * @return string
      */
-    public function getLoginProvider();
-
-    /**
-     * @return string
-     */
-    public function getProviderKey();
-
-    /**
-     * @return string
-     */
-    public function getUserId();
+    public function getName();
 
     /**
      * @return int

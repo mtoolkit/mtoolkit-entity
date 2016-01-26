@@ -1,6 +1,8 @@
 <?php
 namespace mtoolkit\entity\model\user;
 
+use mtoolkit\core\MDataType;
+use mtoolkit\entity\model\provider\ProviderUserBook;
 use mtoolkit\entity\model\role\RoleBook;
 use mtoolkit\entity\model\user\exception\InsertUserException;
 use mtoolkit\model\sql\MPDOQuery;
@@ -8,99 +10,131 @@ use mtoolkit\model\sql\MPDOQuery;
 class UserBook
 {
     /**
-     * @param User      $user
+     * @var null|\PDO
+     */
+    private $connection;
+
+    /**
+     * @var ProviderUserBook
+     */
+    private $providerUserBook;
+
+    /**
+     * @var RoleBook
+     */
+    private $roleBook;
+
+    /**
+     * UserBook constructor.
+     *
      * @param \PDO|null $connection
-     * @return User
+     */
+    public function __construct(\PDO $connection = null)
+    {
+        $this->connection = $connection;
+
+        $this->providerUserBook = new ProviderUserBook($this->connection);
+        $this->roleBook = new RoleBook($this->connection);
+    }
+
+    /**
+     * @param ReadableUser $user
+     * @return int
      * @throws InsertUserException
      * @throws \Exception
+     * @throws \mtoolkit\entity\model\role\exception\InsertRoleException
      */
-    public function save(User $user, \PDO $connection = null)
+    public function save(ReadableUser $user)
     {
         $sql = "CALL mt_user_save(?, ?, ?, ?, ?, ?, ?, ?);";
-        $query = new MPDOQuery($sql, $connection);
-        $query->bindValue($user->getId());
+        $query = new MPDOQuery($sql, $this->connection);
+        // $query->bindValue($user->getId());
         $query->bindValue($user->getEmail());
         $query->bindValue($user->getPassword());
         $query->bindValue($user->getPhoneNumber());
-        $query->bindValue($user->isTwoFactorEnabled());
-        $query->bindValue($user->getEnabledDate());
-        $query->bindValue($user->isEnabled());
+        $query->bindValue((int)$user->isTwoFactorEnabled());
+        $query->bindValue($user->getEnabledDate()->format("Y-m-d H:i:s"));
+        $query->bindValue((int)$user->isEnabled());
         $query->bindValue($user->getAccessFailedCount());
+        $query->bindValue($user->getUserName());
         $queryResult = $query->exec();
 
-        if ($queryResult == false)
-        {
-            throw new InsertUserException($query->getLastError());
+        if ($queryResult == false) {
+            throw new InsertUserException($query->getLastError()->getDriverText());
         }
 
         $result = $query->getResult();
-        $id = $result[0]["id"];
-        $user->setId($id);
+        $id = (int)$result[0]["id"];
 
-        for ($k = 0; $k < count($user->getRoleList()); $k++)
-        {
+        for ($k = 0; $k < count($user->getRoleList()); $k++) {
             $role = $user->getRoleList()[$k];
-            $user->getRoleList()[$k] = RoleBook::saveRole($id, $role);
+            $this->roleBook->saveRole($id, $role);
         }
 
-        for ($k = 0; $k < count($user->getUserLoginsList()); $k++)
-        {
-            $role = $user->getUserLoginsList()[$k];
-            $user->getRoleList()[$k] = RoleBook::saveLoginsList($id, $role);
+        for ($k = 0; $k < count($user->getProviderUserList()); $k++) {
+            $providerUser = $user->getProviderUserList()[$k];
+            $this->providerUserBook->save($id, $providerUser);
         }
 
-        return $user;
+        return (int)$id;
     }
 
     /**
      * @param ReadableUser|User $user
-     * @param \PDO|null         $connection
      * @return bool
      * @throws \Exception
      */
-    public function delete(ReadableUser $user, \PDO $connection = null)
+    public function delete(ReadableUser $user)
     {
         $sql = "CALL mt_user_delete(?);";
-        $query = new MPDOQuery($sql, $connection);
+        $query = new MPDOQuery($sql, $this->connection);
         $query->bindValue($user->getId());
         return $query->exec();
     }
 
     /**
-     * @param           $userId
-     * @param \PDO|null $connection
+     * @param int|null $userId
+     * @param string|null $username
+     * @param string|null $email
      * @return User[]
      * @throws \Exception
      */
-    public function get($userId, \PDO $connection = null)
+    public function get($userId = null, $username = null, $email = null)
     {
-        $userList=array();
-        $sql = "CALL mt_user_get(?);";
-        $query = new MPDOQuery($sql, $connection);
+        MDataType::mustBeNullableInt($userId);
+        MDataType::mustBeNullableString($username);
+        MDataType::mustBeNullableString($email);
+
+        $userList = array();
+        $sql = "CALL mt_user_get(?, ?, ?);";
+        $query = new MPDOQuery($sql, $this->connection);
         $query->bindValue($userId);
+        $query->bindValue($username);
+        $query->bindValue($email);
         $queryResult = $query->exec();
 
-        if ($queryResult == false || $query->getResult()->rowCount() <= 0)
-        {
+        if ($queryResult == false || $query->getResult()->rowCount() <= 0) {
             return $userList;
         }
 
-        foreach ($query->getResult() as $row)
-        {
-            $user=new User();
-            $user->setId($row['id'])
+        foreach ($query->getResult() as $row) {
+            $user = new User();
+
+            $enabledDate = \DateTime::createFromFormat('Y-m-d H:i:s', $row['enabled_date']);
+
+            $user->setId((int)$row['id'])
                 ->setEmail($row['email'])
                 ->setPassword($row['password'])
-                ->setPhoneNumber($row['phone_numer'])
-                ->setTwoFactorEnabled($row['two_factory_enabled'])
-                ->setEnabledDate($row['lockout_end'])
-                ->setEnabled($row['lockount_enabled'])
-                ->setAccessFailedCount($row['access_failed_count'])
-                ->setUserName($row['user_name'])
-                ->setRoleList(RoleBook::getList($row['id']))
-                ->setUserLoginsList(UserLoginsBook::getList($row['id']));
+                ->setPhoneNumber($row['phone_number'])
+                ->setTwoFactorEnabled(($row['two_factor_enabled'] == 1) ? true : false)
+                ->setEnabledDate($enabledDate)
+                ->setEnabled(($row['enabled'] == 1) ? true : false)
+                ->setAccessFailedCount((int)$row['access_failed_count'])
+                ->setUserName($row['username'])
+                ->setRoleList($this->roleBook->get((int)$row['id']))
+                ->setProviderUserList($this->providerUserBook->get((int)$row['id']));
 
-            $userList[]=$user;
+            $userList[] = $user;
         }
 
         return $userList;
