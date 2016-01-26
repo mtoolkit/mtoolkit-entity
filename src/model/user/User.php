@@ -1,7 +1,8 @@
 <?php
 namespace mtoolkit\entity\model\user;
 
-use mtoolkit\entity\model\provider\Provider;
+use mtoolkit\core\MDataType;
+use mtoolkit\entity\model\provider\ProviderUser;
 use mtoolkit\entity\model\role\Role;
 
 class User implements ReadableUser
@@ -34,12 +35,12 @@ class User implements ReadableUser
     /**
      * @var \DateTime
      */
-    private $lockoutEndDateUtc;
+    private $enabledDate;
 
     /**
      * @var bool
      */
-    private $lockoutEnabled;
+    private $enabled;
 
     /**
      * @var int
@@ -49,12 +50,12 @@ class User implements ReadableUser
     /**
      * @var Role[]
      */
-    private $roleList=array();
+    private $roleList = array();
 
     /**
-     * @var Provider[]
+     * @var ProviderUser[]
      */
-    private $userLoginsList=array();
+    private $providerUserList = array();
 
     /**
      * @var string
@@ -75,6 +76,8 @@ class User implements ReadableUser
      */
     public function setId($id)
     {
+        MDataType::mustBe(array(MDataType::INT));
+
         $this->id = $id;
         return $this;
     }
@@ -147,43 +150,9 @@ class User implements ReadableUser
      */
     public function setTwoFactorEnabled($twoFactorEnabled)
     {
+        MDataType::mustBe(array(MDataType::BOOLEAN));
+
         $this->twoFactorEnabled = $twoFactorEnabled;
-        return $this;
-    }
-
-    /**
-     * @return \DateTime
-     */
-    public function getLockoutEndDateUtc()
-    {
-        return $this->lockoutEndDateUtc;
-    }
-
-    /**
-     * @param \DateTime $lockoutEndDateUtc
-     * @return User
-     */
-    public function setLockoutEndDateUtc($lockoutEndDateUtc)
-    {
-        $this->lockoutEndDateUtc = $lockoutEndDateUtc;
-        return $this;
-    }
-
-    /**
-     * @return boolean
-     */
-    public function isLockoutEnabled()
-    {
-        return $this->lockoutEnabled;
-    }
-
-    /**
-     * @param boolean $lockoutEnabled
-     * @return User
-     */
-    public function setLockoutEnabled($lockoutEnabled)
-    {
-        $this->lockoutEnabled = $lockoutEnabled;
         return $this;
     }
 
@@ -242,22 +211,58 @@ class User implements ReadableUser
     }
 
     /**
-     * @return Provider[]
+     * @return ProviderUser[]
      */
-    public function getUserLoginsList()
+    public function getProviderUserList()
     {
-        return $this->userLoginsList;
+        return $this->providerUserList;
     }
 
     /**
-     * @param array $userLoginsList
+     * @param ProviderUser[] $providerUserList
      * @return User
      */
-    public function setUserLoginsList(array $userLoginsList)
+    public function setProviderUserList(array $providerUserList)
     {
-        $this->userLoginsList = $userLoginsList;
+        $this->providerUserList = $providerUserList;
         return $this;
     }
 
+    /**
+     * @return \DateTime
+     */
+    public function getEnabledDate()
+    {
+        return $this->enabledDate;
+    }
 
+    /**
+     * @param \DateTime $enabledDate
+     * @return User
+     */
+    public function setEnabledDate($enabledDate)
+    {
+        $this->enabledDate = $enabledDate;
+        return $this;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isEnabled()
+    {
+        return $this->enabled;
+    }
+
+    /**
+     * @param boolean $enabled
+     * @return User
+     */
+    public function setEnabled($enabled)
+    {
+        MDataType::mustBe(array(MDataType::BOOLEAN));
+
+        $this->enabled = $enabled;
+        return $this;
+    }
 }

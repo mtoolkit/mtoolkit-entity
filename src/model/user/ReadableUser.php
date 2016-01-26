@@ -1,7 +1,7 @@
 <?php
 namespace mtoolkit\entity\model\user;
 
-use mtoolkit\entity\model\provider\Provider;
+use mtoolkit\entity\model\provider\ProviderUser;
 use mtoolkit\entity\model\role\Role;
 
 interface ReadableUser
@@ -34,12 +34,12 @@ interface ReadableUser
     /**
      * @return \DateTime
      */
-    public function getLockoutEndDateUtc();
+    public function getEnabledDate();
 
     /**
      * @return boolean
      */
-    public function isLockoutEnabled();
+    public function isEnabled();
 
     /**
      * @return int
@@ -57,7 +57,7 @@ interface ReadableUser
     public function getRoleList();
 
     /**
-     * @return Provider[]
+     * @return ProviderUser[]
      */
-    public function getUserLoginsList();
+    public function getProviderUserList();
 }
