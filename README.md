@@ -9,10 +9,16 @@ There are three important entities:
 - Provider
 - User
 - Role
+For each entity there is a table in the database.
 
 ## Provider
 
 ## User
+Collects all the information about the user:
+- email
+- password
+- phone
+- username
 
 ## Role
 
